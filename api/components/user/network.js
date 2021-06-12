@@ -7,12 +7,12 @@ const Controller = require('./index');
 const router = express.Router();
 
 router.get('/', list);
-//router.get('/followers', secure('follow'), followList);
 router.post('/follow/:id', secure('follow'), follow);
 router.get('/:id/following', following);
+router.get('/:id/followers', followers);
 router.get('/:id', get);
-router.post('/', upsert);
-router.put('/', secure('update'), upsert);
+router.post('/', insert);
+router.put('/', secure('update'), update);
 
 function list(req, res, next) {
   Controller.list()
@@ -30,8 +30,16 @@ function get(req, res, next) {
     .catch(next);
 }
 
-function upsert(req, res, next) {
-  Controller.upsert(req.body)
+function insert(req, res, next) {
+  Controller.insert(req.body)
+    .then((user) => {
+      response.success(req, res, user, 201)
+    })
+    .catch(next);
+}
+
+function update(req, res, next) {
+  Controller.update(req.body)
     .then((user) => {
       response.success(req, res, user, 201)
     })
@@ -54,14 +62,12 @@ function following(req, res, next) {
     .catch(next);
 }
 
-/*
-function followList(req, res, next) {
-  Controller.followList(req.user.id)
+function followers(req, res, next) {
+  return Controller.followers(req.params.id)
     .then(data => {
-      response.success(req, res, data, 201)
+      return response.success(req, res, data, 200)
     })
     .catch(next);
 }
-*/
 
 module.exports = router;

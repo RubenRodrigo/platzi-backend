@@ -1,4 +1,4 @@
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const error = require('../../../utils/error');
 
 const COLLECTION = 'post';
@@ -22,43 +22,54 @@ module.exports = function (injectedStore) {
     return post;
   }
 
-  async function upsert(data, user) {
+  async function insert(data, user) {
+    const post = {
+      id: nanoid(),
+      user: user,
+      title: data.title,
+    }
+
+    return Store.insert(COLLECTION, post).then(() => post);
+  }
+
+  async function update(data, user) {
     const post = {
       id: data.id,
       user: user,
-      text: data.text,
+      title: data.title,
     }
 
-    if (!post.id) {
-      post.id = nanoid();
-    }
-
-    return Store.upsert(COLLECTION, post).then(() => post);
+    return Store.update(COLLECTION, post).then(() => post);
   }
 
   async function like(post, user) {
-    const like = await Store.upsert(COLLECTION + '_like', {
+    const like = await Store.insert(COLLECTION + '_like', {
       post: post,
-      user: user,
+      user_from: user,
     });
 
     return like;
   }
 
   async function postsLiked(user) {
-    const users = await Store.query(COLLECTION + '_like', { user: user }, { post: post });
-    return users;
+    const join = {}
+    join[COLLECTION] = 'post' // {post: 'post'}
+    const query = { user_from: user }
+    return await Store.query(COLLECTION + '_like', query, join)
   }
 
   async function postLikers(post) {
-    const users = await Store.query(COLLECTION + '_like', { post: post }, { post: post });
-    return users;
+    const join = {}
+    join[COLLECTION] = 'post' // {post: 'post'}
+    const query = { post: post }
+    return await Store.query(COLLECTION + '_like', query, join)
   }
 
   return {
     list,
     get,
-    upsert,
+    insert,
+    update,
     like,
     postsLiked,
     postLikers,

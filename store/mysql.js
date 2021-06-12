@@ -58,6 +58,7 @@ function insert(table, data) {
   return new Promise((resolve, reject) => {
     connection.query(`INSERT INTO ${table} SET ?`, data, (err, result) => {
       if (err) return reject(err)
+      console.log(`CREATE record IN ${table}`, data)
       resolve(result)
     })
   })
@@ -67,6 +68,7 @@ function update(table, data) {
   return new Promise((resolve, reject) => {
     connection.query(`UPDATE ${table} SET ? WHERE id=?`, [data, data.id], (err, result) => {
       if (err) return reject(err)
+      console.log(`UPDATE record IN ${table}`, data)
       resolve(result)
     })
   })
@@ -105,5 +107,7 @@ module.exports = {
   list,
   get,
   upsert,
+  insert,
+  update,
   query
 }

@@ -31,15 +31,11 @@ module.exports = function (injectedStore, injectedCache) {
     return store.get(TABLA, id)
   }
 
-  async function upsert(body) {
+  async function insert(body) {
     const user = {
+      id: nanoid(),
       name: body.name,
       username: body.username,
-    }
-    if (body.id) {
-      user.id = body.id;
-    } else {
-      user.id = nanoid();
     }
 
     if (body.password || body.username) {
@@ -50,12 +46,29 @@ module.exports = function (injectedStore, injectedCache) {
       })
     }
 
-    return store.upsert(TABLA, user)
+    return store.insert(TABLA, user)
+  }
+
+  async function update(body) {
+    const user = {
+      id: body.id,
+      name: body.name,
+      username: body.username,
+    }
+
+    if (body.password || body.username) {
+      await auth.upsert({
+        id: user.id,
+        username: user.username,
+        password: body.password
+      })
+    }
+
+    return store.update(TABLA, user)
   }
 
   function follow(from, to) {
-
-    return store.upsert(TABLA + '_follow', {
+    return store.insert(TABLA + '_follow', {
       user_from: from,
       user_to: to
     });
@@ -68,17 +81,20 @@ module.exports = function (injectedStore, injectedCache) {
     return await store.query(TABLA + '_follow', query, join)
   }
 
-  /*
-  function followList(from) {
-    return store.query(TABLA + '_follow', { user_from: from })
+  async function followers(user) {
+    const join = {}
+    join[TABLA] = 'user_from' // {user: 'user_from'}
+    const query = { user_to: user }
+    return await store.query(TABLA + '_follow', query, join)
   }
-  */
 
   return {
     list,
     get,
-    upsert,
+    insert,
+    update,
     follow,
-    following
+    following,
+    followers
   };
 }
